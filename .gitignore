@@ -1,7 +1,5 @@
-
-.git
-.idea
+.idea/
 requirements.txt
 tcga-benchmarking.tar.gz
-venv
+venv/
 
