@@ -22,3 +22,4 @@ for cancer in cancer_types:
     filtered_data = data.loc[data['Cancer_type'] == cancer]
     gold_standard = filtered_data.iloc[:, 0]
     gold_standard.to_csv(cancer + '.txt', sep=' ', index=False)
+    print cancer, len(gold_standard)

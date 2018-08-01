@@ -10,18 +10,8 @@ import random
 import gzip
 from sklearn.cluster import KMeans
 
-input_dir = "input/"
 
-data = pandas.read_csv(input_dir + "metrics_ref.txt", comment="#", header=None)
-
-gold_standard = data.iloc[:, 0].values
-
-all_cancer_genes = {}
-
-for participant in os.listdir(input_dir + "participants/"):
-    all_cancer_genes[participant] = []
-
-def compute_metrics(gold_standard, cancer_type,all_cancer_genes):
+def compute_metrics(input_dir, gold_standard, cancer_type,all_cancer_genes):
 
     participants_datasets = {}
 
@@ -31,11 +21,11 @@ def compute_metrics(gold_standard, cancer_type,all_cancer_genes):
         data = pandas.read_csv(input_dir + "participants/" + participant + "/" + cancer_type + ".txt", sep='\t',
                                comment="#", header=0)
 
-        # filtered_data = data.loc[data['qvalue'] <= 0.05]
-        #
-        # predicted_genes = filtered_data.iloc[:, 0].values
+        filtered_data = data.loc[data['qvalue'] <= 0.05]
 
-        predicted_genes = data.iloc[:, 0].values
+        predicted_genes = filtered_data.iloc[:, 0].values
+
+        # predicted_genes = data.iloc[:, 0].values
 
         all_cancer_genes[participant] = list(set().union(predicted_genes, all_cancer_genes[participant]))
 
@@ -202,7 +192,7 @@ def plot_diagonal_quartiles(x_values, means, tools, better):
 
 def cluster_tools(my_array, tools, better):
     X = np.array(my_array)
-    kmeans = KMeans(n_clusters=4, n_init=50, random_state=0).fit(X)
+    kmeans = KMeans(n_clusters=6, n_init=50, random_state=0).fit(X)
     # print (method, organism)
     cluster_no = kmeans.labels_
 
@@ -214,6 +204,7 @@ def cluster_tools(my_array, tools, better):
     for centroid in centroids:
         x_values.append(centroid[0])
         y_values.append(centroid[1])
+        plt.plot(centroid[0], centroid[1], '*')
     x_norm, y_norm = normalize_data(x_values, y_values)
     # plt.plot(centroids[0][0], centroids[0][1], '*')
     # get distance from centroids to better corner
@@ -303,12 +294,12 @@ def print_chart(participants_datasets, cancer_type):
 
     ax = plt.subplot()
     for i, val in enumerate(tools, 0):
-        markers = ["o", "v", "^", "1", "2", "3", "4", "s", "8", "p", "P", "*", "h", "H", "+",
-                   "x", "X", ".",
+        markers = [".", "o", "v", "^", "<", ">", "1", "2", "3", "4", "8", "s", "p", "P", "*", "h", "H", "+",
+                   "x", "X",
                    "D",
-                   "d", "|", "_", "<", ">"]
-        colors = ['#a91310', '#9693b0', '#e7afd7', '#fb7f6a', '#0566e5', '#00bdc8', '#cf4119', '#8b123f',
-                  '#b35ccc', '#dbf6a6', '#c0b596', '#516e85', '#1343c3']
+                   "d", "|", "_", ","]
+        colors = ['#5b2a49', '#a91310', '#9693b0', '#e7afd7', '#fb7f6a', '#0566e5', '#00bdc8', '#cf4119', '#8b123f',
+                  '#b35ccc', '#dbf6a6', '#c0b596', '#516e85', '#1343c3', '#7b88be']
 
         ax.errorbar(x_values[i], y_values[i], linestyle='None', marker=markers[i],
                     markersize='15', markerfacecolor=colors[i], markeredgecolor=colors[i], capsize=6,
@@ -495,7 +486,7 @@ def print_full_table(quartiles_table):
     print (text)
 
     df = pandas.DataFrame(text)
-    df1 = df.iloc[:, [0, 34]].copy()
+    df1 = df.iloc[:, [0, 32]].copy()
     vals = df1.values
     print(vals)
 
@@ -525,6 +516,10 @@ def print_full_table(quartiles_table):
     plt.subplots_adjust(right=0.95, left=0.04, top=0.9, bottom=0.1)
 
 
+##############################################################################################################
+##############################################################################################################
+##############################################################################################################
+
 cancer_types = ["ACC", "BLCA", "BRCA", "CESC", "CHOL", "COAD", "DLBC", "ESCA", "GBM", "HNSC", "KICH", "KIRC",
                 "KIRP", "LAML", "LGG", "LIHC", "LUAD", "LUSC", "MESO", "OV", "PAAD", "PANCAN", "PCPG", "PRAD", "READ",
                 "SARC", "SKCM", "STAD", "TGCT", "THCA", "THYM", "UCEC", "UCS", "UVM"]
@@ -533,16 +528,40 @@ cancer_types = ["ACC", "BLCA", "BRCA", "CESC", "CHOL", "COAD", "DLBC", "ESCA", "
                 "KIRP", "LAML", "LGG", "LIHC", "LUAD", "LUSC", "MESO", "OV", "PAAD", "PCPG", "PRAD", "READ",
                 "SARC", "SKCM", "STAD", "TGCT", "THCA", "THYM", "UCS", "UVM"]
 
+cancer_types = ["ACC", "BLCA", "BRCA", "CESC", "CHOL", "DLBC", "ESCA", "GBM", "HNSC", "KICH", "KIRC",
+                "KIRP", "LAML", "LGG", "LIHC", "LUAD", "LUSC", "MESO", "OV", "PAAD", "PCPG", "PRAD",
+                "SARC", "SKCM", "STAD", "TGCT", "THCA", "THYM", "UCS", "UVM"]
+
+input_dir = "input/"
+
+# data = pandas.read_csv(input_dir + "metrics_ref.txt", comment="#", header=None)
+#
+# gold_standard = data.iloc[:, 0].values
+
+## create dict that will store info about all combined cancer types
+all_cancer_genes = {}
+for participant in os.listdir(input_dir + "participants/"):
+    all_cancer_genes[participant] = []
+
 # this dictionary will store all the information required for the quartiles table
 quartiles_table = {}
 
 for cancer in cancer_types:
 
-    participants_datasets, all_cancer_genes = compute_metrics(gold_standard, cancer,all_cancer_genes)
+    data = pandas.read_csv("input/"+ cancer + ".txt",
+                           comment="#", header=None)
+    gold_standard = data.iloc[:, 0].values
+
+    participants_datasets, all_cancer_genes = compute_metrics(input_dir, gold_standard, cancer,all_cancer_genes)
     tools_quartiles_squares, tools_quartiles_diagonal, tools_clusters = print_chart(participants_datasets, cancer)
     quartiles_table[cancer] = [tools_quartiles_squares, tools_quartiles_diagonal, tools_clusters]
 
+
 # plot chart for results across all cancer types
+
+data = pandas.read_csv("input/ALL.txt",
+                           comment="#", header=None)
+gold_standard = data.iloc[:, 0].values
 
 participants_datasets = {}
 for participant, predicted_genes in all_cancer_genes.iteritems():
@@ -562,6 +581,8 @@ for participant, predicted_genes in all_cancer_genes.iteritems():
 tools_quartiles_squares, tools_quartiles_diagonal, tools_clusters = print_chart(participants_datasets, "ALL")
 quartiles_table["ALL"] = [tools_quartiles_squares, tools_quartiles_diagonal, tools_clusters]
 
+
+#print summary table across all cancer types
 print_full_table(quartiles_table)
 # plt.show()
 out_table = "output/table.png"

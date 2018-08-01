@@ -63,8 +63,8 @@ def pareto_frontier(Xs, Ys, maxX=True, maxY=True):
 # funtion that gets quartiles for x and y values
 def plot_square_quartiles(x_values, means, tools, better, percentile=50):
     x_percentile, y_percentile = (np.nanpercentile(x_values, percentile), np.nanpercentile(means, percentile))
-    plt.axvline(x=x_percentile, linestyle='-', color='black', linewidth=0.1)
-    plt.axhline(y=y_percentile, linestyle='-', color='black', linewidth=0.1)
+    # plt.axvline(x=x_percentile, linestyle='-', color='black', linewidth=0.1)
+    # plt.axhline(y=y_percentile, linestyle='-', color='black', linewidth=0.1)
 
     # create a dictionary with tools and their corresponding quartile
     tools_quartiles = {}
@@ -183,9 +183,9 @@ def plot_diagonal_quartiles(x_values, means, tools, better):
     first_quartile, second_quartile, third_quartile = (
         np.nanpercentile(scores, 25), np.nanpercentile(scores, 50), np.nanpercentile(scores, 75))
     # print (first_quartile, second_quartile, third_quartile)
-    draw_diagonal_line(scores_and_values, first_quartile, better, max_x, max_y)
-    draw_diagonal_line(scores_and_values, second_quartile, better, max_x, max_y)
-    draw_diagonal_line(scores_and_values, third_quartile, better, max_x, max_y)
+    # draw_diagonal_line(scores_and_values, first_quartile, better, max_x, max_y)
+    # draw_diagonal_line(scores_and_values, second_quartile, better, max_x, max_y)
+    # draw_diagonal_line(scores_and_values, third_quartile, better, max_x, max_y)
 
     # split in quartiles
     tools_quartiles = get_quartile_points(scores_and_values, first_quartile, second_quartile, third_quartile)
@@ -236,7 +236,7 @@ def cluster_tools(my_array, tools, better):
     tools_clusters = {}
     for (x, y), num, name in zip(X, cluster_no, tools):
         tools_clusters[name] = num + 1
-        plt.text(x, y, num + 1, color="red", fontsize=18)
+        # plt.text(x, y, num + 1, color="red", fontsize=18)
 
 
     return tools_clusters
@@ -320,44 +320,44 @@ def print_chart(participants_datasets, cancer_type):
                      xytext=(-30, 30), textcoords='offset points',
                      ha="right", va="bottom",
                      arrowprops=dict(facecolor='black', shrink=0.05, width=0.9))
-        my_text1 = plt.text(0.99, 0.15, '1',
-                            verticalalignment='bottom', horizontalalignment='right',
-                            transform=ax.transAxes, fontsize=25)
-        my_text2 = plt.text(0.01, 0.15, '2',
-                            verticalalignment='bottom', horizontalalignment='left',
-                            transform=ax.transAxes, fontsize=25)
-        my_text3 = plt.text(0.99, 0.85, '3',
-                            verticalalignment='top', horizontalalignment='right',
-                            transform=ax.transAxes, fontsize=25)
-        my_text4 = plt.text(0.01, 0.85, '4',
-                            verticalalignment='top', horizontalalignment='left',
-                            transform=ax.transAxes, fontsize=25)
-        my_text1.set_alpha(.2)
-        my_text2.set_alpha(.2)
-        my_text3.set_alpha(.2)
-        my_text4.set_alpha(.2)
+        # my_text1 = plt.text(0.99, 0.15, '1',
+        #                     verticalalignment='bottom', horizontalalignment='right',
+        #                     transform=ax.transAxes, fontsize=25)
+        # my_text2 = plt.text(0.01, 0.15, '2',
+        #                     verticalalignment='bottom', horizontalalignment='left',
+        #                     transform=ax.transAxes, fontsize=25)
+        # my_text3 = plt.text(0.99, 0.85, '3',
+        #                     verticalalignment='top', horizontalalignment='right',
+        #                     transform=ax.transAxes, fontsize=25)
+        # my_text4 = plt.text(0.01, 0.85, '4',
+        #                     verticalalignment='top', horizontalalignment='left',
+        #                     transform=ax.transAxes, fontsize=25)
+        # my_text1.set_alpha(.2)
+        # my_text2.set_alpha(.2)
+        # my_text3.set_alpha(.2)
+        # my_text4.set_alpha(.2)
     elif better == 'top-right':
         plt.annotate('better', xy=(0.98, 0.95), xycoords='axes fraction',
                      xytext=(-30, -30), textcoords='offset points',
                      ha="right", va="top",
                      arrowprops=dict(facecolor='black', shrink=0.05, width=0.9))
-        my_text1 = plt.text(0.99, 0.85, '1',
-                            verticalalignment='top', horizontalalignment='right',
-                            transform=ax.transAxes, fontsize=25)
-        my_text2 = plt.text(0.01, 0.85, '2',
-                            verticalalignment='top', horizontalalignment='left',
-                            transform=ax.transAxes, fontsize=25)
-        my_text3 = plt.text(0.99, 0.01, '3',
-                            verticalalignment='bottom', horizontalalignment='right',
-                            transform=ax.transAxes, fontsize=25)
-        my_text4 = plt.text(0.01, 0.01, '4',
-                            verticalalignment='bottom', horizontalalignment='left',
-                            transform=ax.transAxes, fontsize=25)
+        # my_text1 = plt.text(0.99, 0.85, '1',
+        #                     verticalalignment='top', horizontalalignment='right',
+        #                     transform=ax.transAxes, fontsize=25)
+        # my_text2 = plt.text(0.01, 0.85, '2',
+        #                     verticalalignment='top', horizontalalignment='left',
+        #                     transform=ax.transAxes, fontsize=25)
+        # my_text3 = plt.text(0.99, 0.01, '3',
+        #                     verticalalignment='bottom', horizontalalignment='right',
+        #                     transform=ax.transAxes, fontsize=25)
+        # my_text4 = plt.text(0.01, 0.01, '4',
+        #                     verticalalignment='bottom', horizontalalignment='left',
+        #                     transform=ax.transAxes, fontsize=25)
 
-        my_text1.set_alpha(.2)
-        my_text2.set_alpha(.2)
-        my_text3.set_alpha(.2)
-        my_text4.set_alpha(.2)
+        # my_text1.set_alpha(.2)
+        # my_text2.set_alpha(.2)
+        # my_text3.set_alpha(.2)
+        # my_text4.set_alpha(.2)
 
     # plot quartiles
 
