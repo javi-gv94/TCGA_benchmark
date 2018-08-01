@@ -1,0 +1,34 @@
+20/20+
+------
+
+20/20+ is a Random Forest machine learning algorithm to predict oncogenes and tumor suppressor genes. We also used an additional
+generic "driver score" which is the sum of the oncogene and tumor suppressor gene scores from the Random Forest. 
+20/20+ uses features capturing mutational clustering, evolutionary conservation, mutation in silico pathogenicity scores, mutation consequence types, 
+protein interaction network connectivity, and other covariates (e.g. replication timing). A p-value is obtained for the random forest
+scores by using monte carlo simultations adjusting for gene sequence and mutational signatures.
+
+
+Input
+=====
+
+Training list of oncogenes and tumor suppressor genes obtained from the "Cancer Genome Landscapes" paper (PMID: 23539594).
+
+Analysis was performed on the public MC3 data file mc3.v0.2.8.PUBLIC.maf.gz (https://www.synapse.org/#!Synapse:syn7824274).
+The cancer type column and filtering was performed using the suggested scripts (hypermutators were removed).
+
+20/20+ assesses driver genes using protein coding mutations.
+
+Results
+=======
+
+We recommend a q-value threshold of 0.05. Where a gene is significant if either oncogene, tsg, or driver scores were significant (Designated by the TYPE attribute in the INFO field).
+
+20/20+ Citation
+---------------
+
+Tokheim CJ, Papadopoulos N, Kinzler KW, Vogelstein B, & Karchin R (2016) Evaluating the evaluation of cancer driver genes. Proceedings of the National Academy of Sciences 113(50):14330-14335.
+
+Contact
+-------
+
+Please contact either Collin Tokheim (ctokheim AT jhu DOT edu) or Rachel Karchin (karchin AT jhu DOT edu) for more information.
