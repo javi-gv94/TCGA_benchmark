@@ -1,1 +1,0 @@
-gene	transcript	protein_change	score	pvalue	qvalue	info

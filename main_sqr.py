@@ -9,28 +9,54 @@ import os
 import random
 import gzip
 from sklearn.cluster import KMeans
+import math
 
 
-def compute_metrics(input_dir, gold_standard, cancer_type,all_cancer_genes):
+def compute_metrics(input_dir, gold_standard, cancer_type, all_cancer_genes):
 
     participants_datasets = {}
 
-
     for participant in os.listdir(input_dir + "participants/"):
-
+        print participant
+        if os.path.isfile(input_dir + "participants/" + participant + "/" + cancer_type + ".txt") == False:
+            print "#################no data"
+            continue
         data = pandas.read_csv(input_dir + "participants/" + participant + "/" + cancer_type + ".txt", sep='\t',
                                comment="#", header=0)
 
-        filtered_data = data.loc[data['qvalue'] <= 0.05]
+        #filter data by q-value
+        if participant == "MutSig2CV":
 
-        predicted_genes = filtered_data.iloc[:, 0].values
+            filtered_data = data.loc[data['qvalue'] <= 0.1]
+
+            predicted_genes = filtered_data.iloc[:, 0].values
+
+        elif participant == "ActiveDriver":
+
+            filtered_data = data.loc[data['qvalue'] <= 0.0001]
+
+            predicted_genes = filtered_data.iloc[:, 0].values
+
+        elif participant == "MuSiC":
+
+            filtered_data = data.loc[data['pvalue'] <= math.exp(-8)]
+            filtered_data = filtered_data[filtered_data['info'] == "FILTER=PASS"]
+
+            predicted_genes = filtered_data.iloc[:, 0].values
+
+        else:
+
+            filtered_data = data.loc[data['qvalue'] <= 0.05]
+
+            predicted_genes = filtered_data.iloc[:, 0].values
 
         # predicted_genes = data.iloc[:, 0].values
 
         all_cancer_genes[participant] = list(set().union(predicted_genes, all_cancer_genes[participant]))
 
-        # TRUE POSITIVES
+        # TRUE POSITIVE RATE
         overlapping_genes = set(predicted_genes).intersection(gold_standard)
+        TPR = len(overlapping_genes)/len(gold_standard)
 
         #ACCURACY/ PRECISION
         if len(predicted_genes) == 0:
@@ -38,7 +64,7 @@ def compute_metrics(input_dir, gold_standard, cancer_type,all_cancer_genes):
         else:
             acc = len(overlapping_genes) / len(predicted_genes)
 
-        participants_datasets[participant] = [len(overlapping_genes), acc]
+        participants_datasets[participant] = [TPR, acc]
 
     return participants_datasets,all_cancer_genes
 
@@ -311,7 +337,7 @@ def print_chart(participants_datasets, cancer_type):
 
     # set plot title depending on the analysed tool
 
-    ax.set_xlabel("True Positives - Num driver genes correctly predicted", fontsize=12)
+    ax.set_xlabel("True Positive Rate - % driver genes correctly predicted", fontsize=12)
     ax.set_ylabel("Precision - % true positives over total predicted", fontsize=12)
 
     # Shrink current axis's height  on the bottom
@@ -522,14 +548,20 @@ def print_full_table(quartiles_table):
 cancer_types = ["ACC", "BLCA", "BRCA", "CESC", "CHOL", "COAD", "DLBC", "ESCA", "GBM", "HNSC", "KICH", "KIRC",
                 "KIRP", "LAML", "LGG", "LIHC", "LUAD", "LUSC", "MESO", "OV", "PAAD", "PANCAN", "PCPG", "PRAD", "READ",
                 "SARC", "SKCM", "STAD", "TGCT", "THCA", "THYM", "UCEC", "UCS", "UVM"]
+# #remove coad & read
+# cancer_types = ["ACC", "BLCA", "BRCA", "CESC", "CHOL", "DLBC", "ESCA", "GBM", "HNSC", "KICH", "KIRC",
+#                 "KIRP", "LAML", "LGG", "LIHC", "LUAD", "LUSC", "MESO", "OV", "PAAD", "PANCAN", "PCPG", "PRAD",
+#                 "SARC", "SKCM", "STAD", "TGCT", "THCA", "THYM", "UCEC", "UCS", "UVM"]
+# #remove coad & read & pancan
+# cancer_types = ["ACC", "BLCA", "BRCA", "CESC", "CHOL", "DLBC", "ESCA", "GBM", "HNSC", "KICH", "KIRC",
+#                 "KIRP", "LAML", "LGG", "LIHC", "LUAD", "LUSC", "MESO", "OV", "PAAD", "PCPG", "PRAD",
+#                 "SARC", "SKCM", "STAD", "TGCT", "THCA", "THYM", "UCEC", "UCS", "UVM"]
+#
+# #remove coad & read & pancan & ucec
+# cancer_types = ["ACC", "BLCA", "BRCA", "CESC", "CHOL", "DLBC", "ESCA", "GBM", "HNSC", "KICH", "KIRC",
+#                 "KIRP", "LAML", "LGG", "LIHC", "LUAD", "LUSC", "MESO", "OV", "PAAD", "PCPG", "PRAD",
+#                 "SARC", "SKCM", "STAD", "TGCT", "THCA", "THYM", "UCS", "UVM"]
 
-cancer_types = ["ACC", "BLCA", "BRCA", "CESC", "CHOL", "COAD", "DLBC", "ESCA", "GBM", "HNSC", "KICH", "KIRC",
-                "KIRP", "LAML", "LGG", "LIHC", "LUAD", "LUSC", "MESO", "OV", "PAAD", "PCPG", "PRAD", "READ",
-                "SARC", "SKCM", "STAD", "TGCT", "THCA", "THYM", "UCS", "UVM"]
-
-cancer_types = ["ACC", "BLCA", "BRCA", "CESC", "CHOL", "DLBC", "ESCA", "GBM", "HNSC", "KICH", "KIRC",
-                "KIRP", "LAML", "LGG", "LIHC", "LUAD", "LUSC", "MESO", "OV", "PAAD", "PCPG", "PRAD",
-                "SARC", "SKCM", "STAD", "TGCT", "THCA", "THYM", "UCS", "UVM"]
 
 input_dir = "input/"
 
@@ -546,7 +578,7 @@ for participant in os.listdir(input_dir + "participants/"):
 quartiles_table = {}
 
 for cancer in cancer_types:
-
+    print "--------------", cancer
     data = pandas.read_csv("input/"+ cancer + ".txt",
                            comment="#", header=None)
     gold_standard = data.iloc[:, 0].values
@@ -565,8 +597,9 @@ gold_standard = data.iloc[:, 0].values
 participants_datasets = {}
 for participant, predicted_genes in all_cancer_genes.iteritems():
 
-    # TRUE POSITIVES
+    # TRUE POSITIVE RATE
     overlapping_genes = set(predicted_genes).intersection(gold_standard)
+    TPR = len(overlapping_genes) / len(gold_standard)
 
     # ACCURACY/ PRECISION
     if len(predicted_genes) == 0:
@@ -574,7 +607,7 @@ for participant, predicted_genes in all_cancer_genes.iteritems():
     else:
         acc = len(overlapping_genes) / len(predicted_genes)
 
-    participants_datasets[participant] = [len(overlapping_genes), acc]
+    participants_datasets[participant] = [TPR, acc]
 
 
 tools_quartiles_squares, tools_quartiles_diagonal, tools_clusters = print_chart(participants_datasets, "ALL")
