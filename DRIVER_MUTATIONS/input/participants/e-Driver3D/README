@@ -1,0 +1,11 @@
+These results apply only to mutations tagged with "Missense_Mutation"
+
+The data used in this analysis are in:
+"CREATE GITHUB REPO"
+
+We recommend to take as positives those genes with q < 0.05
+
+The method is described in:
+A pan-cancer catalogue of cancer driver protein interaction interfaces
+E Porta-Pardo, L Garcia-Alonso, T Hrabe, J Dopazo, A Godzik
+PLoS Comput Biol 11 (10), e1004518

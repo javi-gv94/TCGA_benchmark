@@ -1,0 +1,2 @@
+gene	transcript	protein_change	score	pvalue	qvalue	info
+HRAS	ENST00000451590	.	46.022	.	.	CLUSTER_ID=0.0;PROT_RANGE=61,13;AMINOACIDS=p.Q61K,p.G13R,p.Q61L,p.Q61R

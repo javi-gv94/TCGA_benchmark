@@ -1,0 +1,2 @@
+gene	transcript	protein_change	score	pvalue	qvalue	info
+TP53	ENST00000269305	.	0.149	.	.	CLUSTER_ID=1.0;PROT_RANGE=234,135,273,275;AMINOACIDS=p.R273C,p.C135Y,p.Y234C,p.C275S

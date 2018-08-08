@@ -1,0 +1,2 @@
+gene	transcript	protein_change	score	pvalue	qvalue	info
+KRAS	ENST00000256078	.	0.007	.	.	CLUSTER_ID=0.0;PROT_RANGE=61,12;AMINOACIDS=p.G12R,p.Q61K

@@ -1,0 +1,28 @@
+VEST
+----
+
+VEST (Variant Effect Scoring Tool) is a machine learning method that predicts the functional significance of missense mutations observed through genome sequencing, allowing mutations to be prioritized in subsequent functional studies, based on the probability that they impair protein activity.
+
+Input
+=====
+
+Analysis was performed on the MC3 data file mc3.v0.2.8.PUBLIC.maf.gz (https://www.synapse.org/#!Synapse:syn7824274).
+We used the suggested scripts to add cancer type column and filter mutations (including hypermutators).
+
+VEST scores missense, frameshift indel, inframe indel, stop-gain, stop-loss, and splice site mutations.
+
+Results
+=======
+
+We suggest a qvalue threshold of 0.05.
+
+
+CHASM & VEST Citation
+---------------------
+
+Carter H, Chen S, Isik L, Tyekucheva S, Velculescu VE, Kinzler KW, Vogelstein B, Karchin R.(2009) Cancer-specific high-throughput annotation of somatic mutations: computational prediction of driver missense mutations.Cancer Research. 69(16):6660-7
+
+Contact
+-------
+
+Please contact either Collin Tokheim (ctokheim AT jhu DOT edu) or Rachel Karchin (karchin AT jhu DOT edu) for more information.

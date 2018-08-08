@@ -1,0 +1,2 @@
+gene	transcript	protein_change	score	pvalue	qvalue	info
+BRAF	ENST00000288602	.	293.746	.	.	CLUSTER_ID=0.0;PROT_RANGE=600,601;AMINOACIDS=p.K601E,p.V600E

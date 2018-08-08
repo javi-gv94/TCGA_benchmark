@@ -1,0 +1,28 @@
+CHASM 
+-----
+
+CHASM (Cancer-specific High-throughput Annotation of Somatic Mutations) is a machine learning method that predicts the functional significance of somatic missense mutations observed in the genomes of cancer cells, allowing mutations to be prioritized in subsequent functional studies, based on the probability that they give the cells a selective survival advantage.
+
+
+Input
+=====
+
+Analysis was performed on the MC3 data file mc3.v0.2.8.PUBLIC.maf.gz (https://www.synapse.org/#!Synapse:syn7824274).
+We used the suggested scripts to add the cancer type column, and filter mutations (including hypermutators).
+
+CHASM only scores missense mutations.
+
+Results
+=======
+
+We suggest a q-value threshold of 0.05.
+
+CHASM 
+-----
+
+Carter H, Chen S, Isik L, Tyekucheva S, Velculescu VE, Kinzler KW, Vogelstein B, Karchin R.(2009) Cancer-specific high-throughput annotation of somatic mutations: computational prediction of driver missense mutations.Cancer Research. 69(16):6660-7
+
+Contact
+-------
+
+Please contact either Collin Tokheim (ctokheim AT jhu DOT edu) or Rachel Karchin (karchin AT jhu DOT edu) for more information.

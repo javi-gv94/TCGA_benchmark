@@ -1,0 +1,2 @@
+gene	transcript	protein_change	score	pvalue	qvalue	info
+SF3B1	ENST00000335508	.	27.702	.	.	CLUSTER_ID=0.0;PROT_RANGE=666,662,625,663;AMINOACIDS=p.T663P,p.R625C,p.K666T,p.R625H,p.H662R
