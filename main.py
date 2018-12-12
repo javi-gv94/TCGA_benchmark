@@ -16,10 +16,11 @@ def compute_metrics(input_dir, gold_standard, cancer_type, all_cancer_genes):
 
     participants_datasets = {}
 
+    # print os.listdir(input_dir + "participants/")
     for participant in os.listdir(input_dir + "participants/"):
-        print participant
+        # print participant
         if os.path.isfile(input_dir + "participants/" + participant + "/" + cancer_type + ".txt") == False:
-            print "#################no data"
+            # print "#################no data"
             continue
         data = pandas.read_csv(input_dir + "participants/" + participant + "/" + cancer_type + ".txt", sep='\t',
                                comment="#", header=0)
@@ -118,17 +119,8 @@ def plot_square_quartiles(x_values, means, tools, better, percentile=50):
 
 
 # function to normalize the x and y axis to 0-1 range
-def normalize_data(x_values, means):
-    maxX = max(x_values)
-    minX = min(x_values)
-    maxY = max(means)
-    minY = min(means)
-    # maxX = ax.get_xlim()[1]
-    # minX = ax.get_xlim()[0]
-    # maxY = ax.get_ylim()[1]
-    # minY = ax.get_ylim()[0]
-    # x_norm = [(x - minX) / (maxX - minX) for x in x_values]
-    # means_norm = [(y - minY) / (maxY - minY) for y in means]
+def normalize_data(x_values, means, maxX, maxY):
+
     x_norm = [x / maxX for x in x_values]
     means_norm = [y / maxY for y in means]
     return x_norm, means_norm
@@ -176,7 +168,7 @@ def plot_diagonal_quartiles(x_values, means, tools, better):
     # get distance to lowest score corner
 
     # normalize data to 0-1 range
-    x_norm, means_norm = normalize_data(x_values, means)
+    x_norm, means_norm = normalize_data(x_values, means, max(x_values), max(means))
     max_x = max(x_values)
     max_y = max(means)
     # compute the scores for each of the tool. based on their distance to the x and y axis
@@ -232,7 +224,7 @@ def cluster_tools(my_array, tools, better):
     for centroid in centroids:
         x_values.append(centroid[0])
         y_values.append(centroid[1])
-    x_norm, y_norm = normalize_data(x_values, y_values)
+    x_norm, y_norm = normalize_data(x_values, y_values, max(x_values), max(y_values))
     # plt.plot(centroids[0][0], centroids[0][1], '*')
     # get distance from centroids to better corner
     distances = []
@@ -267,6 +259,52 @@ def cluster_tools(my_array, tools, better):
 
     return tools_clusters
 
+
+def get_pareto_scores(x_values, y_values, tools, p_frontX, p_frontY):
+
+    #normalize both the data and the frontier
+    x_values_n, y_values_n = normalize_data(x_values, y_values, max(x_values), max(y_values))
+    p_frontX, p_frontY = normalize_data(p_frontX, p_frontY, max(x_values), max(y_values))
+
+    participants_scores = {}
+    pareto_scores = []
+    #compute a score for each participant based in distance to frontier
+    for i, name in enumerate(tools):
+
+        #p3 stores the coordinates for the participant
+        p3 = (x_values_n[i], y_values_n[i])
+        scores = []
+        # the distance is computed to all segments of pareto, but only the lowest one is considered
+        for j in range(len(p_frontX[:-1])):
+            #p1 and p2 store the coordinates of the segment limits
+            p1= (p_frontX[j], p_frontY[j])
+            p2 = (p_frontX[j+1], p_frontY[j+1])
+            d = np.linalg.norm(np.cross(np.subtract(p2, p1), np.subtract(p1, p3)) / np.linalg.norm(np.subtract(p2, p1)))
+            scores.append(d)
+
+        participants_scores[name] = min(scores)
+        print name, min(scores)
+        pareto_scores.append(min(scores))
+
+    pareto_scores = sorted(pareto_scores, reverse=True)
+
+    first_quartile, second_quartile, third_quartile = (
+        np.nanpercentile(pareto_scores, 25), np.nanpercentile(pareto_scores, 50), np.nanpercentile(pareto_scores, 75))
+    print first_quartile, second_quartile, third_quartile
+    for (x, y), name in zip(zip(x_values, y_values), tools):
+
+        if participants_scores[name] > third_quartile:
+            quartile = 4
+        elif second_quartile < participants_scores[name] <= third_quartile:
+            quartile = 3
+        elif first_quartile < participants_scores[name] <= second_quartile:
+            quartile = 2
+        elif participants_scores[name] <= first_quartile:
+            quartile = 1
+
+        plt.text(x, y, quartile, color="red", fontsize=18)
+
+    return "OK"
 
 def print_chart(participants_datasets, cancer_type):
     tools = []
@@ -327,18 +365,30 @@ def print_chart(participants_datasets, cancer_type):
 
     # get pareto frontier and plot
     p_frontX, p_frontY = pareto_frontier(x_values, y_values, maxX=max_x, maxY=max_y)
-    plt.plot(p_frontX, p_frontY, linestyle='--', color='grey', linewidth=1)
+
+
     # append edges to pareto frontier
     if better == 'bottom-right':
-        left_edge = [[x_lims[0], p_frontX[-1]], [p_frontY[-1], p_frontY[-1]]]
-        right_edge = [[p_frontX[0], p_frontX[0]], [p_frontY[0], y_lims[1]]]
-        plt.plot(left_edge[0], left_edge[1], right_edge[0], right_edge[1], linestyle='--', color='red',
-                 linewidth=1)
+        # left_edge = [[x_lims[0], p_frontX[-1]], [p_frontY[-1], p_frontY[-1]]]
+        # right_edge = [[p_frontX[0], p_frontX[0]], [p_frontY[0], y_lims[1]]]
+        # plt.plot(left_edge[0], left_edge[1], right_edge[0], right_edge[1], linestyle='--', color='red',
+        #          linewidth=1)
+
+        p_frontX.append(x_lims[0])
+        p_frontY.append(p_frontY[-1])
+        p_frontX = [p_frontX[0]] + p_frontX
+        p_frontY = [y_lims[1]] + p_frontY
     elif better == 'top-right':
-        left_edge = [[x_lims[0], p_frontX[-1]], [p_frontY[-1], p_frontY[-1]]]
-        right_edge = [[p_frontX[0], p_frontX[0]], [p_frontY[0], y_lims[0]]]
-        plt.plot(left_edge[0], left_edge[1], right_edge[0], right_edge[1], linestyle='--', color='red',
-                 linewidth=1)
+        # left_edge = [[x_lims[0], p_frontX[-1]], [p_frontY[-1], p_frontY[-1]]]
+        # right_edge = [[p_frontX[0], p_frontX[0]], [p_frontY[0], y_lims[0]]]
+        # plt.plot(left_edge[0], left_edge[1], right_edge[0], right_edge[1], linestyle='--', color='red',
+        #          linewidth=1)
+        p_frontX.append(x_lims[0])
+        p_frontY.append(p_frontY[-1])
+        p_frontX = [p_frontX[0]] + p_frontX
+        p_frontY = [y_lims[0]] + p_frontY
+
+    plt.plot(p_frontX, p_frontY, linestyle='--', color='grey', linewidth=1)
 
     # add 'better' annotation and quartile numbers to plot
     if better == 'bottom-right':
@@ -391,7 +441,8 @@ def print_chart(participants_datasets, cancer_type):
     tools_quartiles_diagonal = plot_diagonal_quartiles(x_values, y_values, tools, better)
 
     tools_clusters = cluster_tools(zip(x_values, y_values), tools, better)
-
+    print "#####", cancer_type
+    tools_pareto_score = get_pareto_scores(x_values, y_values, tools, p_frontX, p_frontY)
 
     # plt.show()
     outname = "output/" + cancer_type + "_output.png"
@@ -509,6 +560,8 @@ cancer_types = ["ACC", "BLCA", "BRCA", "CESC", "CHOL", "COAD", "DLBC", "ESCA", "
 
 
 
+
+
 input_dir = "input/"
 
 # data = pandas.read_csv(input_dir + "metrics_ref.txt", comment="#", header=None)
@@ -536,36 +589,38 @@ for cancer in cancer_types:
 
 # plot chart for results across all cancer types
 
-data = pandas.read_csv("input/ALL.txt",
-                           comment="#", header=None)
-gold_standard = data.iloc[:, 0].values
-
-participants_datasets = {}
-for participant, predicted_genes in all_cancer_genes.iteritems():
-
-    # TRUE POSITIVE RATE
-    overlapping_genes = set(predicted_genes).intersection(gold_standard)
-    TPR = len(overlapping_genes) / len(gold_standard)
-
-    # ACCURACY/ PRECISION
-    if len(predicted_genes) == 0:
-        acc = 0
-    else:
-        acc = len(overlapping_genes) / len(predicted_genes)
-
-    participants_datasets[participant] = [TPR, acc]
-
-
-tools_quartiles_squares, tools_quartiles_diagonal, tools_clusters = print_chart(participants_datasets, "ALL")
-quartiles_table["ALL"] = [tools_quartiles_squares, tools_quartiles_diagonal, tools_clusters]
+# data = pandas.read_csv("input/ALL.txt",
+#                            comment="#", header=None)
+# gold_standard = data.iloc[:, 0].values
+#
+# participants_datasets = {}
+# for participant, predicted_genes in all_cancer_genes.iteritems():
+#
+#     # if participant == "2020plus" or participant == "ActiveDriver" or participant == "e-Driver":
+#     #     print predicted_genes
+#     # TRUE POSITIVE RATE
+#     overlapping_genes = set(predicted_genes).intersection(gold_standard)
+#     TPR = len(overlapping_genes) / len(gold_standard)
+#
+#     # ACCURACY/ PRECISION
+#     if len(predicted_genes) == 0:
+#         acc = 0
+#     else:
+#         acc = len(overlapping_genes) / len(predicted_genes)
+#
+#     participants_datasets[participant] = [TPR, acc]
+#
+#
+# tools_quartiles_squares, tools_quartiles_diagonal, tools_clusters = print_chart(participants_datasets, "ALL")
+# quartiles_table["ALL"] = [tools_quartiles_squares, tools_quartiles_diagonal, tools_clusters]
 
 
 #print summary table across all cancer types
-print_full_table(quartiles_table)
-# plt.show()
-out_table = "output/table.png"
-fig = plt.gcf()
-fig.set_size_inches(20, 11.1)
-fig.savefig(out_table, dpi=100)
-
-plt.close("all")
+# print_full_table(quartiles_table)
+# # plt.show()
+# out_table = "output/table.png"
+# fig = plt.gcf()
+# fig.set_size_inches(20, 11.1)
+# fig.savefig(out_table, dpi=100)
+#
+# plt.close("all")

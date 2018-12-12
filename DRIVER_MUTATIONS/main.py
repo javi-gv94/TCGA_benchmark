@@ -16,38 +16,50 @@ def compute_metrics(input_dir, gold_standard, cancer_type, all_cancer_genes):
 
     participants_datasets = {}
 
+
     for participant in os.listdir(input_dir + "participants/"):
-        print participant
+        # print participant
         if os.path.isfile(input_dir + "participants/" + participant + "/" + cancer_type + ".txt") == False:
             print "#################no data"
             continue
 
-        predicted_mutations = []
-
+        #read participant predictions and delete insiginificant columns
         data = pandas.read_csv("input/participants/" + participant + "/" + cancer_type + ".txt", sep="\t",
-                               comment="#", header=0)
-        for index, row in data.iterrows():
-            predicted_mutations.append(row['gene'] + "-" + str(row['protein_change']))
+                                                      comment="#", header=0)
+        data.drop(['transcript','score','pvalue','qvalue','info'], inplace=True, axis=1)
+
+        #merge both participant and gold standard dataframes in one, and check for overlapping
+        df = pandas.merge(data, gold_standard, on=['gene', 'protein_change'], how='left', indicator='Overlap')
+        df['Overlap'] = np.where(df.Overlap == 'both', True, False)
+
+        # final = df[df['Exist'] == True]
+        # final.to_csv(cancer + participant + 'results.txt', sep='\t', index=False)
+        print (participant, df[df['Overlap'] == True].shape[0])
 
 
-        # predicted_genes = data.iloc[:, 0].values
-
-        all_cancer_genes[participant] = list(set().union(predicted_mutations, all_cancer_genes[participant]))
+        #
+        # all_cancer_genes[participant] = list(set().union(predicted_mutations, all_cancer_genes[participant]))
+        #
+        #number of predicted mutations is the number of rows in participant data
+        predicted_mutations = data.shape[0]
+        #number of overlapping genes with gold standard is the count of overlap=Trues in merged df
+        overlapping_genes = df[df['Overlap'] == True].shape[0]
+        #gold standard length
+        gold_standard_len = gold_standard.shape[0]
 
         # TRUE POSITIVE RATE
-        overlapping_genes = set(predicted_mutations).intersection(gold_standard)
-        TPR = len(overlapping_genes)/len(gold_standard)
+        TPR = overlapping_genes/gold_standard_len
 
         #ACCURACY/ PRECISION
-        if len(predicted_mutations) == 0:
+        if predicted_mutations == 0:
             acc = 0
         else:
-            acc = len(overlapping_genes) / len(predicted_mutations)
+            acc = overlapping_genes / predicted_mutations
 
         participants_datasets[participant] = [TPR, acc]
 
-    print participants_datasets
-    return participants_datasets,all_cancer_genes
+    # print participants_datasets
+    return participants_datasets,0
 
 
 def pareto_frontier(Xs, Ys, maxX=True, maxY=True):
@@ -221,9 +233,7 @@ cancer_types = ["ACC", "BLCA", "BRCA", "CESC", "CHOL", "COAD", "DLBC", "ESCA", "
 
 input_dir = "input/"
 
-# data = pandas.read_csv(input_dir + "metrics_ref.txt", comment="#", header=None)
-#
-# gold_standard = data.iloc[:, 0].values
+
 
 ## create dict that will store info about all combined cancer types
 all_cancer_genes = {}
@@ -235,12 +245,8 @@ quartiles_table = {}
 
 for cancer in cancer_types:
 
-    data = pandas.read_csv("input/METRICS_REFS/"+ cancer + ".txt", sep="\t",
+    gold_standard = pandas.read_csv("input/METRICS_REFS/"+ cancer + ".txt", sep="\t",
                            comment="#", header=0)
-    gold_standard = []
-
-    for index, row in data.iterrows():
-        gold_standard.append(row['gene'] + "-" + row['change'])
 
 
     participants_datasets, all_cancer_genes = compute_metrics(input_dir, gold_standard, cancer,all_cancer_genes)

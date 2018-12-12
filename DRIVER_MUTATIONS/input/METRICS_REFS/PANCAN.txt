@@ -1,1 +1,1 @@
-gene	change
+gene	protein_change
