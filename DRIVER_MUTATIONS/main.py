@@ -24,26 +24,28 @@ def compute_metrics(input_dir, gold_standard, cancer_type, all_cancer_genes):
             continue
 
         #read participant predictions and delete insiginificant columns
-        data = pandas.read_csv("input/participants/" + participant + "/" + cancer_type + ".txt", sep="\t",
+        predictions = pandas.read_csv("input/participants/" + participant + "/" + cancer_type + ".txt", sep="\t",
                                                       comment="#", header=0)
-        data.drop(['transcript','score','pvalue','qvalue','info'], inplace=True, axis=1)
+        predictions.drop(['transcript','score','pvalue','info'], inplace=True, axis=1)
+
+        # predictions = data[data['qvalue'] <= 0.05]
 
         #merge both participant and gold standard dataframes in one, and check for overlapping
-        df = pandas.merge(data, gold_standard, on=['gene', 'protein_change'], how='left', indicator='Overlap')
+        df = pandas.merge(predictions, gold_standard, on=['gene', 'protein_change'], how='left', indicator='Overlap')
         df['Overlap'] = np.where(df.Overlap == 'both', True, False)
 
-        # final = df[df['Exist'] == True]
+        final = df[df['Overlap'] == True]
         # final.to_csv(cancer + participant + 'results.txt', sep='\t', index=False)
-        print (participant, df[df['Overlap'] == True].shape[0])
-
+        print (participant, final.shape[0])
 
         #
-        # all_cancer_genes[participant] = list(set().union(predicted_mutations, all_cancer_genes[participant]))
+        all_cancer_genes[participant] = all_cancer_genes[participant].append(predictions[['gene', 'protein_change']], ignore_index=True)
+
         #
         #number of predicted mutations is the number of rows in participant data
-        predicted_mutations = data.shape[0]
+        predicted_mutations = predictions.shape[0]
         #number of overlapping genes with gold standard is the count of overlap=Trues in merged df
-        overlapping_genes = df[df['Overlap'] == True].shape[0]
+        overlapping_genes = final.shape[0]
         #gold standard length
         gold_standard_len = gold_standard.shape[0]
 
@@ -59,7 +61,7 @@ def compute_metrics(input_dir, gold_standard, cancer_type, all_cancer_genes):
         participants_datasets[participant] = [TPR, acc]
 
     # print participants_datasets
-    return participants_datasets,0
+    return participants_datasets,all_cancer_genes
 
 
 def pareto_frontier(Xs, Ys, maxX=True, maxY=True):
@@ -238,7 +240,7 @@ input_dir = "input/"
 ## create dict that will store info about all combined cancer types
 all_cancer_genes = {}
 for participant in os.listdir(input_dir + "participants/"):
-    all_cancer_genes[participant] = []
+    all_cancer_genes[participant] = pandas.DataFrame(columns=['gene','protein_change'])
 
 # this dictionary will store all the information required for the quartiles table
 quartiles_table = {}
@@ -255,6 +257,46 @@ for cancer in cancer_types:
     # quartiles_table[cancer] = [tools_quartiles_squares, tools_quartiles_diagonal, tools_clusters]
 
 
+# plot chart for results across all cancer types
+
+gold_standard = pandas.read_csv("input/METRICS_REFS/ALL.txt", sep="\t",
+                                comment="#", header=0)
+
+participants_datasets = {}
+for participant, predicted_mutations in all_cancer_genes.iteritems():
+
+    predicted_mutations.drop_duplicates(subset=['gene', 'protein_change'], keep=False)
+
+    # merge both participant and gold standard dataframes in one, and check for overlapping
+    df = pandas.merge(predicted_mutations, gold_standard, on=['gene', 'protein_change'], how='left', indicator='Overlap')
+    df['Overlap'] = np.where(df.Overlap == 'both', True, False)
+
+    final = df[df['Overlap'] == True]
+    predicted_mutations.to_csv(participant + '_ALLresults.txt', sep='\t', index=False)
+    print (participant, final.shape[0])
+
+
+    # number of predicted mutations is the number of rows in participant data
+    predicted_mutations = predicted_mutations.shape[0]
+    # number of overlapping genes with gold standard is the count of overlap=Trues in merged df
+    overlapping_genes = final.shape[0]
+    # gold standard length
+    gold_standard_len = gold_standard.shape[0]
+
+    # TRUE POSITIVE RATE
+    TPR = overlapping_genes / gold_standard_len
+
+    # ACCURACY/ PRECISION
+    if predicted_mutations == 0:
+        acc = 0
+    else:
+        acc = overlapping_genes / predicted_mutations
+
+    participants_datasets[participant] = [TPR, acc]
+
+
+print_chart(participants_datasets, "ALL")
+# quartiles_table["ALL"] = [tools_quartiles_squares, tools_quartiles_diagonal, tools_clusters]
 
 
 

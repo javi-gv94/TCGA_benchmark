@@ -16,6 +16,7 @@ driver_genes = pandas.read_csv("../input/ALL.txt",
 driver_genes = driver_genes.iloc[:, 0].values
 
 filtered_data = {}
+all_cancer_genes = []
 for cancer in cancer_types:
     filtered_data[cancer] = []
 
@@ -29,6 +30,8 @@ for index, row in data.iterrows():
 
         for type in row['CODE'].split(','):
             filtered_data[type].append([row['Hugo_Symbol'], row['HGVSp_Short']])
+            all_cancer_genes.append([row['Hugo_Symbol'], row['HGVSp_Short']])
+
 # remove duplicates
 for key, val in filtered_data.iteritems():
     print key
@@ -41,3 +44,12 @@ for cancer in cancer_types:
 
     df.to_csv(cancer + '.txt', sep='\t', index=False)
     print cancer, len(df)
+
+#get gold standard fo all cancers
+
+all_cancer_genes.sort()
+all_cancer_genes =  list( all_cancer_genes for all_cancer_genes, _ in itertools.groupby(all_cancer_genes))
+
+df = pandas.DataFrame(all_cancer_genes, columns=['gene', 'protein_change'])
+
+df.to_csv('ALL.txt', sep='\t', index=False)
