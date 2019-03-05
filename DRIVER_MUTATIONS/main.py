@@ -26,20 +26,31 @@ def compute_metrics(input_dir, gold_standard, cancer_type, all_cancer_genes):
         #read participant predictions and delete insiginificant columns
         predictions = pandas.read_csv("input/participants/" + participant + "/" + cancer_type + ".txt", sep="\t",
                                                       comment="#", header=0)
+        if participant == "MutationAssessor":
+            predictions = predictions.loc[predictions['score'] >= 3.5]
+        elif participant == "SIFT":
+            predictions = predictions.loc[predictions['score'] < 0.05]
+
         predictions.drop(['transcript','score','pvalue','info'], inplace=True, axis=1)
-
+        #drop duplicates
+        predictions.drop_duplicates(keep=False, inplace=True)
         # predictions = data[data['qvalue'] <= 0.05]
-
+        # predictions.to_csv(cancer + participant + 'results.txt', sep='\t', index=False)
         #merge both participant and gold standard dataframes in one, and check for overlapping
         df = pandas.merge(predictions, gold_standard, on=['gene', 'protein_change'], how='left', indicator='Overlap')
         df['Overlap'] = np.where(df.Overlap == 'both', True, False)
 
         final = df[df['Overlap'] == True]
+
         # final.to_csv(cancer + participant + 'results.txt', sep='\t', index=False)
-        print (participant, final.shape[0])
+        # print participant
+        # print "predicted", predictions.shape[0]
+        # print "overlapping", final.shape[0]
+        # print "gold", gold_standard.shape[0]
 
         #
         all_cancer_genes[participant] = all_cancer_genes[participant].append(predictions[['gene', 'protein_change']], ignore_index=True)
+        all_cancer_genes[participant].drop_duplicates(keep=False, inplace=True)
 
         #
         #number of predicted mutations is the number of rows in participant data
@@ -59,7 +70,7 @@ def compute_metrics(input_dir, gold_standard, cancer_type, all_cancer_genes):
             acc = overlapping_genes / predicted_mutations
 
         participants_datasets[participant] = [TPR, acc]
-
+        # print participant, TPR, acc
     # print participants_datasets
     return participants_datasets,all_cancer_genes
 
@@ -232,6 +243,7 @@ cancer_types = ["ACC", "BLCA", "BRCA", "CESC", "CHOL", "COAD", "DLBC", "ESCA", "
                 "KIRP", "LAML", "LGG", "LIHC", "LUAD", "LUSC", "MESO", "OV", "PAAD", "PCPG", "PRAD", "READ",
                 "SARC", "SKCM", "STAD", "TGCT", "THCA", "THYM", "UCEC", "UCS", "UVM"]
 
+# cancer_types = ["CHOL"]
 
 input_dir = "input/"
 
@@ -265,16 +277,16 @@ gold_standard = pandas.read_csv("input/METRICS_REFS/ALL.txt", sep="\t",
 participants_datasets = {}
 for participant, predicted_mutations in all_cancer_genes.iteritems():
 
-    predicted_mutations.drop_duplicates(subset=['gene', 'protein_change'], keep=False)
+    # print participant, predicted_mutations.shape[0]
+    predicted_mutations.drop_duplicates(subset=['gene', 'protein_change'])
+    predicted_mutations.to_csv(participant + 'results.txt', sep='\t', index=False)
 
     # merge both participant and gold standard dataframes in one, and check for overlapping
     df = pandas.merge(predicted_mutations, gold_standard, on=['gene', 'protein_change'], how='left', indicator='Overlap')
     df['Overlap'] = np.where(df.Overlap == 'both', True, False)
 
     final = df[df['Overlap'] == True]
-    predicted_mutations.to_csv(participant + '_ALLresults.txt', sep='\t', index=False)
-    print (participant, final.shape[0])
-
+    # predicted_mutations.to_csv(participant + '_ALLresults.txt', sep='\t', index=False)
 
     # number of predicted mutations is the number of rows in participant data
     predicted_mutations = predicted_mutations.shape[0]
@@ -293,7 +305,10 @@ for participant, predicted_mutations in all_cancer_genes.iteritems():
         acc = overlapping_genes / predicted_mutations
 
     participants_datasets[participant] = [TPR, acc]
-
+    print participant,TPR,acc
+    print "predicted", predicted_mutations
+    print "overlapping", final.shape[0]
+    print "gold", gold_standard.shape[0]
 
 print_chart(participants_datasets, "ALL")
 # quartiles_table["ALL"] = [tools_quartiles_squares, tools_quartiles_diagonal, tools_clusters]
